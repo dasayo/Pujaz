@@ -2,7 +2,7 @@
 
 Guía para revisar qué está probado en el Gateway y cómo probarlo a mano o con pruebas end-to-end.
 
-- **Automáticas:** 174 pruebas con Vitest. No necesitan Docker ni los microservicios.
+- **Automáticas:** 181 pruebas con Vitest. No necesitan Docker ni los microservicios.
 - **Contra los MS reales:** lo que levanta `docker compose`, a través de Nginx en `http://localhost:8080/graphql`. Ver la [sección 5](#5-con-los-microservicios-reales).
 - **A mano con datos falsos:** el Gateway solo, sin los MS ([sección 3](#3-probar-a-mano-datos-falsos)).
 
@@ -15,7 +15,7 @@ Requiere Node.js 22 o superior.
 ```bash
 cd gateway-bff
 npm install
-npm test                 # las 174 pruebas
+npm test                 # las 181 pruebas
 npm run typecheck        # revisión de tipos de TypeScript
 ```
 
@@ -45,16 +45,16 @@ Las pruebas usan los **clientes falsos** (datos en memoria que imitan a los MS).
 |---|---|---|
 | `integration/auth.test.ts` | 12 | `register`, `login`, `me`: token válido, `EMAIL_TAKEN`, `INVALID_CREDENTIALS` (mismo mensaje si falla el correo o la contraseña), `BAD_USER_INPUT`, token vencido o inválido → `UNAUTHENTICATED`, la contraseña nunca sale en la respuesta |
 | `integration/catalog.test.ts` | 14 | `items` (todos y con búsqueda), `item` inexistente → `null`, `auction(itemId)` con su ítem, ítem sin subasta → `null`, **una sola llamada** al MS para todo el listado, nada pide token |
-| `integration/bids.test.ts` | 11 | `placeBid`: sin token, puja válida (reserva saldo), reintegro al ganador anterior, `BID_TOO_LOW`, `AUCTION_CLOSED`, `INSUFFICIENT_FUNDS`, `NOT_FOUND`, el usuario sale del token |
+| `integration/bids.test.ts` | 13 | `placeBid`: sin token, puja válida (reserva saldo), reintegro al ganador anterior, `BID_TOO_LOW` (debe superar el precio actual en al menos 100), `AUCTION_CLOSED`, `INSUFFICIENT_FUNDS`, `NOT_FOUND`, el usuario sale del token |
 | `integration/realtime.test.ts` | 3 | `auctionUpdated`: dos suscriptores reciben el evento, uno de otra subasta no, una puja fallida no publica nada, no pide token |
-| `integration/wallet.test.ts` | 13 | `wallet` y `deposit`: sin token, saldos y orden de movimientos, monto ≤ 0 → `BAD_USER_INPUT`, la subasta de cada reserva en **una sola llamada** |
+| `integration/wallet.test.ts` | 15 | `wallet` y `deposit`: sin token, saldos y orden de movimientos, monto ≤ 0 o `promoCode` inválido o ausente → `BAD_USER_INPUT`, la subasta de cada reserva en **una sola llamada** |
 | `integration/profile.test.ts` | 11 | `updateUser` y `deleteUser`: sin token, solo cambia lo enviado, `EMAIL_TAKEN`, validaciones, cambio de contraseña, cuenta borrada |
 | `integration/create-item.test.ts` | 9 | `createItem`: sin token, crea ítem y subasta, duración por defecto de 14 días, `BAD_USER_INPUT`, falla de la subasta |
 | `integration/server.test.ts` | 5 | El schema se sirve, errores con los códigos del contrato, error inesperado → `INTERNAL` sin detalles |
 | `integration/startup.test.ts` | 3 | Sin `JWT_SECRET` o con uno corto no arranca; con `USE_MOCKS=false` arranca con los clientes HTTP |
 | `unit/http-client.test.ts` | 11 | Traducción de errores de los MS, MS caído, tiempo de espera de 5 s, rutas que no existen |
 | `unit/http-clients.test.ts` | 27 | Cada cliente HTTP con respuestas reales de los MS: validación del contrato (por ejemplo, usuario sin `createdAt` → `INTERNAL`), `POST /items` y `POST /auctions`, lista vacía como `null` |
-| `unit/*.mock.test.ts`, `token.service`, `config`, `auth.service` | 55 | Reglas de los clientes falsos, firma y vencimiento del JWT, variables de entorno |
+| `unit/*.mock.test.ts`, `token.service`, `config`, `auth.service` | 58 | Reglas de los clientes falsos, firma y vencimiento del JWT, variables de entorno |
 
 
 ---
@@ -110,7 +110,7 @@ mutation { register(input: { name: "Luis", email: "luis@correo.com", password: "
 **Billetera** (con token):
 ```graphql
 { wallet { available reserved movements { type amount auction { id } } } }
-mutation { deposit(amount: 500000) { available } }
+mutation { deposit(amount: 500000, promoCode: "PROMO2026") { available } }
 ```
 
 **Pujar** (con el token de Luis, después de recargar):
@@ -135,8 +135,8 @@ Todo error llega en `errors[0].extensions.code`.
 | `wallet`, `deposit`, `placeBid`, `me`, `updateUser`, `deleteUser` o `createItem` sin token, o con un token inválido o vencido | `UNAUTHENTICATED` |
 | `login` con contraseña o correo incorrectos | `INVALID_CREDENTIALS` |
 | `register` con un correo ya usado, o `updateUser` con el correo de otro | `EMAIL_TAKEN` |
-| `register` con contraseña de menos de 8 caracteres, `deposit(amount: 0)`, `createItem` con precio base 0 | `BAD_USER_INPUT` |
-| `placeBid` en la subasta `12` por 120000 o menos | `BID_TOO_LOW` |
+| `register` con contraseña de menos de 8 caracteres, `deposit(amount: 0)`, `deposit` con un `promoCode` distinto de `PROMO2026`, `createItem` con precio base 0 | `BAD_USER_INPUT` |
+| `placeBid` en la subasta `12` por menos de 120100 (hay que superar el precio actual en al menos 100) | `BID_TOO_LOW` |
 | `placeBid` en la subasta `13` | `AUCTION_CLOSED` |
 | `placeBid` por más del saldo disponible | `INSUFFICIENT_FUNDS` |
 | `placeBid` en la subasta `999` | `NOT_FOUND` |

@@ -127,9 +127,9 @@ Todos los errores llegan en `errors[].extensions.code` con **uno de estos 9 valo
 | `UNAUTHENTICATED` | Operación protegida sin token, o con un token inválido o vencido |
 | `INVALID_CREDENTIALS` | `login` con un correo o una contraseña incorrectos (mismo mensaje en los dos casos) |
 | `EMAIL_TAKEN` | `register` o `updateUser` con un correo que ya existe |
-| `BAD_USER_INPUT` | Datos inválidos (por ejemplo, `register` con un campo vacío, un correo inválido o una contraseña de menos de 8 caracteres, o `deposit` con monto <= 0) o una consulta GraphQL mal escrita |
+| `BAD_USER_INPUT` | Datos inválidos (por ejemplo, `register` con un campo vacío, un correo inválido o una contraseña de menos de 8 caracteres, o `deposit` con monto <= 0 o con un `promoCode` inválido) o una consulta GraphQL mal escrita |
 | `NOT_FOUND` | El recurso no existe (`item(id)` inexistente devuelve `null`, no este error) |
-| `BID_TOO_LOW` | La puja no supera el precio actual |
+| `BID_TOO_LOW` | La puja no supera el precio actual en al menos 100 |
 | `AUCTION_CLOSED` | La subasta ya terminó |
 | `INSUFFICIENT_FUNDS` | No hay saldo disponible suficiente para pujar |
 | `INTERNAL` | Fallo inesperado. El mensaje siempre es genérico y nunca trae detalles internos |
