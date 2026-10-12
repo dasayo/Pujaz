@@ -99,10 +99,12 @@ describe('HttpWalletClient', () => {
     expect(lastUrl()).toBe('http://ms/users/4/wallet');
   });
 
-  it('deposit envía el monto y conserva BAD_USER_INPUT', async () => {
+  it('deposit envía el monto y el promoCode, y conserva BAD_USER_INPUT', async () => {
     willRespond(400, { code: 'BAD_USER_INPUT', message: 'Invalid input' });
-    await expect(new HttpWalletClient(http()).deposit('4', 0)).rejects.toMatchObject({ code: 'BAD_USER_INPUT' });
-    expect(fetchFn.mock.calls[0]![1]).toMatchObject({ method: 'POST', body: '{"amount":0}' });
+    await expect(new HttpWalletClient(http()).deposit('4', 0, 'PROMO2026')).rejects.toMatchObject({
+      code: 'BAD_USER_INPUT',
+    });
+    expect(fetchFn.mock.calls[0]![1]).toMatchObject({ method: 'POST', body: '{"amount":0,"promoCode":"PROMO2026"}' });
     expect(lastUrl()).toBe('http://ms/users/4/wallet/deposits');
   });
 });
