@@ -115,6 +115,17 @@ describe('HttpAuctionClient', () => {
     expect(lastUrl()).toBe(`http://ms/auctions?itemIds=${MS_AUCTION.itemId},otro`);
   });
 
+  it('una consulta en lote que responde null (slice vacío de Go) es una lista vacía', async () => {
+    willRespond(200, null);
+    await expect(new HttpAuctionClient(http()).getAuctionsByItemIds(['sin-subasta'])).resolves.toEqual([]);
+  });
+
+  it('una consulta en lote que no responde una lista sale INTERNAL', async () => {
+    willRespond(200, {});
+    await expect(new HttpAuctionClient(http()).getAuctionsByIds(['1'])).rejects.toMatchObject({ code: 'INTERNAL' });
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('no es una lista'));
+  });
+
   it('si el MS no tiene la consulta en lote (redirección), sale INTERNAL', async () => {
     willRespond(307);
     await expect(new HttpAuctionClient(http()).getAuctionsByIds(['1'])).rejects.toMatchObject({ code: 'INTERNAL' });
