@@ -2,7 +2,7 @@
 
 Guía para revisar qué está probado en el Gateway y cómo probarlo a mano o con pruebas end-to-end.
 
-- **Automáticas:** 169 pruebas con Vitest, todas en verde. No necesitan Docker ni los microservicios.
+- **Automáticas:** 174 pruebas con Vitest. No necesitan Docker ni los microservicios.
 - **Contra los MS reales:** lo que levanta `docker compose`, a través de Nginx en `http://localhost:8080/graphql`. Ver la [sección 5](#5-con-los-microservicios-reales).
 - **A mano con datos falsos:** el Gateway solo, sin los MS ([sección 3](#3-probar-a-mano-datos-falsos)).
 
@@ -15,7 +15,7 @@ Requiere Node.js 22 o superior.
 ```bash
 cd gateway-bff
 npm install
-npm test                 # las 169 pruebas
+npm test                 # las 174 pruebas
 npm run typecheck        # revisión de tipos de TypeScript
 ```
 
@@ -53,7 +53,7 @@ Las pruebas usan los **clientes falsos** (datos en memoria que imitan a los MS).
 | `integration/server.test.ts` | 5 | El schema se sirve, errores con los códigos del contrato, error inesperado → `INTERNAL` sin detalles |
 | `integration/startup.test.ts` | 3 | Sin `JWT_SECRET` o con uno corto no arranca; con `USE_MOCKS=false` arranca con los clientes HTTP |
 | `unit/http-client.test.ts` | 11 | Traducción de errores de los MS, MS caído, tiempo de espera de 5 s, rutas que no existen |
-| `unit/http-clients.test.ts` | 22 | Cada cliente HTTP con respuestas reales de los MS: validación del contrato (por ejemplo, usuario sin `createdAt` → `INTERNAL`) |
+| `unit/http-clients.test.ts` | 27 | Cada cliente HTTP con respuestas reales de los MS: validación del contrato (por ejemplo, usuario sin `createdAt` → `INTERNAL`), `POST /items` y `POST /auctions`, lista vacía como `null` |
 | `unit/*.mock.test.ts`, `token.service`, `config`, `auth.service` | 55 | Reglas de los clientes falsos, firma y vencimiento del JWT, variables de entorno |
 
 
@@ -178,26 +178,23 @@ Las semillas solo se cargan cuando los volúmenes están vacíos. Las subastas d
 | Reloj Vintage | `60d5ec49f1b2c3d4e5f60001` | `1`, abierta |
 | Pintura Abstracta … Porsche 911 Clásico | `60d5ec49f1b2c3d4e5f60002` … `…60010` | `2` … `10`, abiertas |
 
-Usuarios: Ana, Heider y Cata (`ana@correo.com`, `heider@correo.com`, `cata@correo.com`), pero **no pueden iniciar sesión** (ver la tabla). Para probar se registra un usuario nuevo, se recarga su billetera con `deposit` y se puja.
+Cada subasta arranca en el `basePrice` de su ítem (por ejemplo, el Reloj Vintage en 100000).
+
+Usuarios: Ana, Heider y Cata (`ana@correo.com`, `heider@correo.com`, `cata@correo.com`), todos con contraseña `12345678`. También se puede registrar un usuario nuevo. Para pujar hay que recargar primero; la recarga exige el código promocional `PROMO2026`:
+
+```graphql
+mutation { deposit(amount: 500000, promoCode: "PROMO2026") { available } }
+```
 
 ### Qué funciona hoy
 
-| Operación | Con los MS reales |
-|---|---|
-| `items`, `item`, `auction`, la subasta de cada ítem | ✅ |
-| `placeBid`, `auctionUpdated` | ✅ |
-| `wallet`, `deposit` | ✅ (las reservas llegan sin su subasta: el MS las guarda con `auctionId: null`) |
-| `register`, `login`, `me`, `updateUser`, `deleteUser` | ✅ con usuarios registrados |
-| `login` de Ana, Heider o Cata (semilla) | ❌ `INVALID_CREDENTIALS`: sus contraseñas en la semilla no son hashes bcrypt |
-| `createItem` | ❌ `INTERNAL`: el MS transaccional no tiene `POST /auctions` |
+Todas las operaciones del schema funcionan con los MS reales: catálogo y subastas, registro, login (también los usuarios de la semilla), perfil, billetera con la subasta de cada reserva, pujas con reserva y reintegro, `auctionUpdated` y `createItem`.
 
-Además, las semillas no coinciden en el precio: el ítem en MongoDB tiene `basePrice` 100000 y su subasta en PostgreSQL arranca en `currentPrice` 100, así que se puede pujar por debajo del precio base.
-
-Lo más simple es **registrar un usuario nuevo** y usar su token. Si hace falta un token de un usuario de la semilla (que no pueden iniciar sesión), se puede firmar uno a mano, por ejemplo para el `1`:
-
-```bash
-docker compose exec gateway-bff node -e "import('/app/dist/modules/auth/token.service.js').then(async m => console.log(await new m.TokenService(process.env.JWT_SECRET, '1h').sign('1')))"
+**Crear ítem:**
+```graphql
+mutation { createItem(input: { name: "Radio Philips 1950", description: "De tubos", basePrice: 150000 }) { id auction { id status endsAt } } }
 ```
+Sin `endsAt`, la subasta dura 14 días. El MS catálogo exige `description`. Si la subasta se rechaza (`basePrice: 0` o `endsAt` en el pasado), responde `BAD_USER_INPUT` y el ítem queda en el catálogo sin subasta (`auction: null` en el listado).
 
 ### Leer el log del Gateway
 
@@ -223,7 +220,7 @@ Estos son los flujos que más valor tienen en las pruebas end-to-end de la SPA, 
 6. **Tiempo real:** dos usuarios en la misma subasta; cuando uno puja, el otro ve el cambio sin recargar.
 7. **Protección:** sin sesión, la billetera y el botón de pujar no deben estar disponibles (o deben pedir iniciar sesión).
 
-Con datos falsos se pueden correr todos. Con los MS reales también, registrando usuarios nuevos (los de la semilla no pueden iniciar sesión).
+Con datos falsos se pueden correr todos. Con los MS reales también, con los usuarios de la semilla o registrando usuarios nuevos.
 
 ---
 
