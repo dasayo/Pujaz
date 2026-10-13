@@ -48,6 +48,7 @@ Abra una terminal y ejecute:
 ```bash
 git clone https://github.com/heider88/Pujaz.git
 cd Pujaz
+git checkout v1.0-entrega1
 ```
 
 ## 3. Configurar las variables de entorno
@@ -55,8 +56,10 @@ cd Pujaz
 **Paso 1.** Cree el archivo de configuración local a partir de la plantilla:
 
 ```bash
-cp .env
+cp .env.example .env
 ```
+
+En Windows (PowerShell): `Copy-Item .env.example .env`.
 
 **Paso 2.** Genere dos secretos aleatorios. Ejecute el comando dos veces y guarde cada resultado por separado: uno será la contraseña de PostgreSQL y el otro, el secreto de los tokens JWT.
 
@@ -135,7 +138,8 @@ Para volver a iniciar el sistema, repita el paso 4.
 ```bash
 git clone https://github.com/heider88/Pujaz.git
 cd Pujaz
-cp .env
+git checkout v1.0-entrega1
+cp .env.example .env
 # Configure .env antes de continuar
 docker compose up --build
 ```
