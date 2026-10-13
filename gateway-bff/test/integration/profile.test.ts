@@ -40,7 +40,7 @@ const WALLET = `{ wallet { available } }`;
 const DEPOSIT = `mutation ($amount: Float!, $promoCode: String!) { deposit(amount: $amount, promoCode: $promoCode) { available } }`;
 const BID = `mutation ($auctionId: ID!, $amount: Float!) { placeBid(auctionId: $auctionId, amount: $amount) { id } }`;
 
-const LUIS = { name: 'Luis', email: 'luis@correo.com', password: 'secreto456' };
+const LUIS = { name: 'Luis', email: 'luis@correo.com', password: 'Secreto456' };
 
 describe('perfil', () => {
   it('1. updateUser y deleteUser sin token devuelven UNAUTHENTICATED y no llaman al MS', async () => {
@@ -87,11 +87,11 @@ describe('perfil', () => {
 
   it('2d. cambiar la contraseña hace que el login use la nueva', async () => {
     const { graphql, login, loginAsAna } = setup();
-    await graphql(UPDATE, { input: { password: 'nueva-clave-123' } }, await loginAsAna());
+    await graphql(UPDATE, { input: { password: 'Nueva-clave-123' } }, await loginAsAna());
 
     const old = await login('ana@correo.com', 'secreto123');
     expect(old.errors[0].extensions.code).toBe('INVALID_CREDENTIALS');
-    const { data, errors } = await login('ana@correo.com', 'nueva-clave-123');
+    const { data, errors } = await login('ana@correo.com', 'Nueva-clave-123');
     expect(errors).toBeUndefined();
     expect(data.login.token).toEqual(expect.any(String));
   });

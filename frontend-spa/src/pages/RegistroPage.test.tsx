@@ -8,7 +8,7 @@ import { ana, renderConApp } from '../test/render'
 function llenarYEnviar(password = 'Secreto123') {
   fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Ana Gómez' } })
   fireEvent.change(screen.getByLabelText('Correo'), { target: { value: 'ana@correo.com' } })
-  fireEvent.change(screen.getByLabelText('Contraseña (mínimo 8 caracteres)'), {
+  fireEvent.change(screen.getByLabelText('Contraseña (mínimo 8 caracteres, con mayúscula y número)'), {
     target: { value: password },
   })
   fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
