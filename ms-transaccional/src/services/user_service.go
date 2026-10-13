@@ -21,7 +21,8 @@ var (
 var nameRegex = regexp.MustCompile(`^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,50}$`)
 
 func isValidPassword(s string) bool {
-	if len(s) < 8 {
+	// bcrypt no acepta más de 72 bytes
+	if len(s) < 8 || len(s) > 72 {
 		return false
 	}
 	hasUpper := false
@@ -113,7 +114,20 @@ func (s *UserService) UpdateUser(ctx context.Context, idStr string, req models.U
 		return nil, ErrBadUserInput
 	}
 
-	user, err := s.repo.UpdateUser(ctx, id, req.Name, req.Email)
+	var passwordHash *string
+	if req.Password != nil {
+		if !isValidPassword(*req.Password) {
+			return nil, ErrBadUserInput
+		}
+		hash, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, err
+		}
+		h := string(hash)
+		passwordHash = &h
+	}
+
+	user, err := s.repo.UpdateUser(ctx, id, req.Name, req.Email, passwordHash)
 	if err != nil {
 		if strings.Contains(err.Error(), "unique constraint") || strings.Contains(err.Error(), "users_email_key") {
 			return nil, ErrEmailTaken

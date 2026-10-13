@@ -78,7 +78,8 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*mod
 	return &u, hash, nil
 }
 
-func (r *UserRepository) UpdateUser(ctx context.Context, id int, name, email *string) (*models.User, error) {
+// passwordHash en nil conserva la contraseña actual.
+func (r *UserRepository) UpdateUser(ctx context.Context, id int, name, email, passwordHash *string) (*models.User, error) {
 	var current models.User
 	var cID int
 	err := r.db.QueryRowContext(ctx, "SELECT id, name, email, role, status, created_at FROM users WHERE id = $1 AND status = 'activa'", id).Scan(&cID, &current.Name, &current.Email, &current.Role, &current.Status, &current.CreatedAt)
@@ -96,7 +97,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, id int, name, email *st
 		current.Email = *email
 	}
 
-	_, err = r.db.ExecContext(ctx, "UPDATE users SET name = $1, email = $2 WHERE id = $3", current.Name, current.Email, id)
+	_, err = r.db.ExecContext(ctx, "UPDATE users SET name = $1, email = $2, password_hash = COALESCE($3, password_hash) WHERE id = $4", current.Name, current.Email, passwordHash, id)
 	if err != nil {
 		return nil, err
 	}
