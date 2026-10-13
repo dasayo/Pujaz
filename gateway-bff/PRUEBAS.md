@@ -2,7 +2,7 @@
 
 Guía para revisar qué está probado en el Gateway y cómo probarlo a mano o con pruebas end-to-end.
 
-- **Automáticas:** 181 pruebas con Vitest. No necesitan Docker ni los microservicios.
+- **Automáticas:** 186 pruebas con Vitest. No necesitan Docker ni los microservicios.
 - **Contra los MS reales:** lo que levanta `docker compose`, a través de Nginx en `http://localhost:8080/graphql`. Ver la [sección 5](#5-con-los-microservicios-reales).
 - **A mano con datos falsos:** el Gateway solo, sin los MS ([sección 3](#3-probar-a-mano-datos-falsos)).
 
@@ -15,7 +15,7 @@ Requiere Node.js 22 o superior.
 ```bash
 cd gateway-bff
 npm install
-npm test                 # las 181 pruebas
+npm test                 # las 186 pruebas
 npm run typecheck        # revisión de tipos de TypeScript
 ```
 
@@ -48,13 +48,13 @@ Las pruebas usan los **clientes falsos** (datos en memoria que imitan a los MS).
 | `integration/bids.test.ts` | 13 | `placeBid`: sin token, puja válida (reserva saldo), reintegro al ganador anterior, `BID_TOO_LOW` (debe superar el precio actual en al menos 100), `AUCTION_CLOSED`, `INSUFFICIENT_FUNDS`, `NOT_FOUND`, el usuario sale del token |
 | `integration/realtime.test.ts` | 3 | `auctionUpdated`: dos suscriptores reciben el evento, uno de otra subasta no, una puja fallida no publica nada, no pide token |
 | `integration/wallet.test.ts` | 15 | `wallet` y `deposit`: sin token, saldos y orden de movimientos, monto ≤ 0 o `promoCode` inválido o ausente → `BAD_USER_INPUT`, la subasta de cada reserva en **una sola llamada** |
-| `integration/profile.test.ts` | 11 | `updateUser` y `deleteUser`: sin token, solo cambia lo enviado, `EMAIL_TAKEN`, validaciones, cambio de contraseña, cuenta borrada |
+| `integration/profile.test.ts` | 13 | `updateUser` y `deleteUser`: sin token, solo cambia lo enviado, `EMAIL_TAKEN`, validaciones, cambio de contraseña, cuenta borrada, el token de una cuenta borrada ya no sirve (`UNAUTHENTICATED`) |
 | `integration/create-item.test.ts` | 9 | `createItem`: sin token, crea ítem y subasta, duración por defecto de 14 días, `BAD_USER_INPUT`, falla de la subasta |
 | `integration/server.test.ts` | 5 | El schema se sirve, errores con los códigos del contrato, error inesperado → `INTERNAL` sin detalles |
 | `integration/startup.test.ts` | 3 | Sin `JWT_SECRET` o con uno corto no arranca; con `USE_MOCKS=false` arranca con los clientes HTTP |
 | `unit/http-client.test.ts` | 11 | Traducción de errores de los MS, MS caído, tiempo de espera de 5 s, rutas que no existen |
 | `unit/http-clients.test.ts` | 27 | Cada cliente HTTP con respuestas reales de los MS: validación del contrato (por ejemplo, usuario sin `createdAt` → `INTERNAL`), `POST /items` y `POST /auctions`, lista vacía como `null` |
-| `unit/*.mock.test.ts`, `token.service`, `config`, `auth.service` | 58 | Reglas de los clientes falsos, firma y vencimiento del JWT, variables de entorno |
+| `unit/*.mock.test.ts`, `token.service`, `config`, `auth.service` | 61 | Reglas de los clientes falsos, firma y vencimiento del JWT, token de un usuario borrado, variables de entorno |
 
 
 ---

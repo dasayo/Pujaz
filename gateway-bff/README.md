@@ -108,6 +108,7 @@ curl -s http://localhost:4000/graphql \
 1. `login` o `register` devuelven `{ token, user }`.
 2. En cada operación protegida, la SPA envía el encabezado `Authorization: Bearer <token>`.
 3. El token dura **24 horas**. Cuando vence, las operaciones protegidas responden `UNAUTHENTICATED` y hay que iniciar sesión de nuevo.
+4. En cada petición con token, el Gateway confirma con el MS transaccional que el usuario siga existiendo. Si la cuenta se borró, su token deja de servir (`UNAUTHENTICATED`).
 
 | Públicas (sin token) | Protegidas (con token) |
 |---|---|
@@ -124,7 +125,7 @@ Todos los errores llegan en `errors[].extensions.code` con **uno de estos 9 valo
 
 | Código | Cuándo aparece |
 |---|---|
-| `UNAUTHENTICATED` | Operación protegida sin token, o con un token inválido o vencido |
+| `UNAUTHENTICATED` | Operación protegida sin token, o con un token inválido, vencido o de una cuenta borrada |
 | `INVALID_CREDENTIALS` | `login` con un correo o una contraseña incorrectos (mismo mensaje en los dos casos) |
 | `EMAIL_TAKEN` | `register` o `updateUser` con un correo que ya existe |
 | `BAD_USER_INPUT` | Datos inválidos (por ejemplo, `register` con un campo vacío, un correo inválido o una contraseña de menos de 8 caracteres, o `deposit` con monto <= 0 o con un `promoCode` inválido) o una consulta GraphQL mal escrita |
