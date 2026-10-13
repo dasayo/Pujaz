@@ -6,7 +6,6 @@ import { codigoError } from '../api/errores'
 import { REGISTER } from '../api/usuarios'
 import { useSesion } from '../session/SessionContext'
 
-const MINIMO_CONTRASENA = 8
 const REGLA_NOMBRE = /^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,50}$/
 const REGLA_PASSWORD = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/
 
