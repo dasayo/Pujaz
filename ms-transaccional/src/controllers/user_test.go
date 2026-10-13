@@ -111,4 +111,35 @@ func TestUserEndpoints(t *testing.T) {
 			t.Errorf("Expected 404 for non-existent user get, got %d", resGet.StatusCode)
 		}
 	})
+
+	// 6. Usuario Eliminado: el borrado es lógico, pero para la API ya no existe
+	t.Run("Usuario_Eliminado", func(t *testing.T) {
+		req := models.CreateUserRequest{Name: "Borrar", Email: "borrar@c.com", Password: "Password123"}
+		b, _ := json.Marshal(req)
+		res, err := http.Post(server.URL+"/users", "application/json", bytes.NewReader(b))
+		if err != nil { t.Fatal(err) }
+		var user models.User
+		json.NewDecoder(res.Body).Decode(&user)
+
+		send := func(method, body string) int {
+			r, _ := http.NewRequest(method, server.URL+"/users/"+user.ID, bytes.NewReader([]byte(body)))
+			r.Header.Set("Content-Type", "application/json")
+			resp, err := http.DefaultClient.Do(r)
+			if err != nil { t.Fatal(err) }
+			return resp.StatusCode
+		}
+
+		if code := send(http.MethodDelete, ""); code != 204 {
+			t.Fatalf("Expected 204 on delete, got %d", code)
+		}
+		if code := send(http.MethodGet, ""); code != 404 {
+			t.Errorf("Expected 404 on get after delete, got %d", code)
+		}
+		if code := send(http.MethodPatch, `{"name":"Otro"}`); code != 404 {
+			t.Errorf("Expected 404 on patch after delete, got %d", code)
+		}
+		if code := send(http.MethodDelete, ""); code != 404 {
+			t.Errorf("Expected 404 on second delete, got %d", code)
+		}
+	})
 }

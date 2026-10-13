@@ -36,6 +36,9 @@ const REGISTER = `mutation ($input: RegisterInput!) { register(input: $input) { 
 const UPDATE = `mutation ($input: UpdateUserInput!) { updateUser(input: $input) { id name email } }`;
 const DELETE = `mutation { deleteUser }`;
 const ME = `{ me { id name email } }`;
+const WALLET = `{ wallet { available } }`;
+const DEPOSIT = `mutation ($amount: Float!, $promoCode: String!) { deposit(amount: $amount, promoCode: $promoCode) { available } }`;
+const BID = `mutation ($auctionId: ID!, $amount: Float!) { placeBid(auctionId: $auctionId, amount: $amount) { id } }`;
 
 const LUIS = { name: 'Luis', email: 'luis@correo.com', password: 'secreto456' };
 
@@ -125,7 +128,36 @@ describe('perfil', () => {
 
     const again = await login('ana@correo.com', 'secreto123');
     expect(again.errors[0].extensions.code).toBe('INVALID_CREDENTIALS');
-    const me = await graphql(ME, undefined, token);
-    expect(me.errors[0].extensions.code).toBe('NOT_FOUND');
+  });
+
+  it('4b. después de deleteUser, el token de la cuenta borrada ya no sirve', async () => {
+    const { graphql, clients, loginAsAna } = setup();
+    const token = await loginAsAna();
+    await graphql(DELETE, undefined, token);
+    const deposit = vi.spyOn(clients.walletClient, 'deposit');
+    const bid = vi.spyOn(clients.auctionClient, 'placeBid');
+
+    const responses = await Promise.all([
+      graphql(ME, undefined, token),
+      graphql(WALLET, undefined, token),
+      graphql(DEPOSIT, { amount: 1000, promoCode: 'PROMO2026' }, token),
+      graphql(BID, { auctionId: '12', amount: 999999 }, token),
+      graphql(UPDATE, { input: { name: 'Otra' } }, token),
+      graphql(DELETE, undefined, token),
+    ]);
+    for (const { errors } of responses) {
+      expect(errors[0].extensions.code).toBe('UNAUTHENTICATED');
+    }
+    expect(deposit).not.toHaveBeenCalled();
+    expect(bid).not.toHaveBeenCalled();
+  });
+
+  it('4c. si el MS falla al revisar el usuario, el token se acepta y las consultas públicas siguen', async () => {
+    const { graphql, clients, loginAsAna } = setup();
+    const token = await loginAsAna();
+    vi.spyOn(clients.userClient, 'getUser').mockRejectedValueOnce(new Error('MS caído'));
+    const { data, errors } = await graphql(`{ items { id } }`, undefined, token);
+    expect(errors).toBeUndefined();
+    expect(data.items.length).toBeGreaterThan(0);
   });
 });
