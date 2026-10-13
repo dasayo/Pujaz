@@ -10,3 +10,8 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Dependencias y resultados de pruebas
+node_modules/
+test-results/
+playwright-report/
