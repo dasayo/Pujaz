@@ -10,13 +10,21 @@ const MIN_PASSWORD_LENGTH = 8;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVALID_CREDENTIALS_MESSAGE = 'Correo o contraseña incorrectos.';
 
-// Usuario de ejemplo de rest.md §1.
+// Usuario de ejemplo de rest.md §1, más Luis, que ya tiene billetera y pujas en los otros mocks
+// (el Gateway revisa en cada petición que el usuario del token exista).
 const SEED_USERS: StoredUser[] = [
   {
     id: '7',
     name: 'Ana',
     email: 'ana@correo.com',
     password: 'secreto123',
+    createdAt: '2026-10-09T14:00:00Z',
+  },
+  {
+    id: '9',
+    name: 'Luis',
+    email: 'luis.semilla@correo.com',
+    password: 'Secreto456',
     createdAt: '2026-10-09T14:00:00Z',
   },
 ];

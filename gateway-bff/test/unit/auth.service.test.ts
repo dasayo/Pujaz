@@ -25,6 +25,24 @@ describe('AuthService', () => {
       code: 'INVALID_CREDENTIALS',
     });
   });
+
+  it('resolveUserId devuelve el userId de un token válido de un usuario que existe', async () => {
+    const auth = new AuthService(new MockUserClient(), tokens);
+    await expect(auth.resolveUserId(await tokens.sign('7'))).resolves.toBe('7');
+  });
+
+  it('resolveUserId devuelve null con un token inválido', async () => {
+    const auth = new AuthService(new MockUserClient(), tokens);
+    await expect(auth.resolveUserId('no-es-un-jwt')).resolves.toBeNull();
+  });
+
+  it('resolveUserId devuelve null si el usuario fue borrado', async () => {
+    const users = new MockUserClient();
+    const auth = new AuthService(users, tokens);
+    const token = await tokens.sign('7');
+    await users.deleteUser('7');
+    await expect(auth.resolveUserId(token)).resolves.toBeNull();
+  });
 });
 
 describe('requireUser', () => {
