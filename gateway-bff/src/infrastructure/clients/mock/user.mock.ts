@@ -102,8 +102,9 @@ function validateEmail(email: string): void {
 }
 
 function validatePassword(password: string): void {
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    throw new AppError('BAD_USER_INPUT', `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+  const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!PASSWORD_PATTERN.test(password)) {
+    throw new AppError('BAD_USER_INPUT', 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.');
   }
 }
 

@@ -47,7 +47,7 @@ func TestUserEndpoints(t *testing.T) {
 	db.Exec("DELETE FROM users")
 
 	t.Run("Registro_Válido", func(t *testing.T) {
-		req := models.CreateUserRequest{Name: "Carlos", Email: "carlos@c.com", Password: "password123"}
+		req := models.CreateUserRequest{Name: "Carlos", Email: "carlos@c.com", Password: "Password123"}
 		b, _ := json.Marshal(req)
 		res, err := http.Post(server.URL+"/users", "application/json", bytes.NewReader(b))
 		if err != nil { t.Fatal(err) }
@@ -69,7 +69,7 @@ func TestUserEndpoints(t *testing.T) {
 
 	// 2. Email Repetido
 	t.Run("Email_Repetido", func(t *testing.T) {
-		req := models.CreateUserRequest{Name: "Copia", Email: "carlos@c.com", Password: "password123"}
+		req := models.CreateUserRequest{Name: "Copia", Email: "carlos@c.com", Password: "Password123"}
 		b, _ := json.Marshal(req)
 		res, _ := http.Post(server.URL+"/users", "application/json", bytes.NewReader(b))
 		if res.StatusCode != 409 {
@@ -79,7 +79,7 @@ func TestUserEndpoints(t *testing.T) {
 
 	// 3. Credenciales Correctas
 	t.Run("Credenciales_Correctas", func(t *testing.T) {
-		req := models.VerifyCredentialsRequest{Email: "carlos@c.com", Password: "password123"}
+		req := models.VerifyCredentialsRequest{Email: "carlos@c.com", Password: "Password123"}
 		b, _ := json.Marshal(req)
 		res, _ := http.Post(server.URL+"/users/verify-credentials", "application/json", bytes.NewReader(b))
 		if res.StatusCode != 200 {
