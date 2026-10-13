@@ -15,3 +15,6 @@ __pycache__/
 node_modules/
 test-results/
 playwright-report/
+
+# Notas personales de estudio (no van al repo).
+ESTUDIO_DOCKER.md

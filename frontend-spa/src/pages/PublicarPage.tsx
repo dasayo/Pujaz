@@ -49,7 +49,12 @@ export function PublicarPage() {
           endsAt,
         },
       },
-      refetchQueries: ['GetItems'], // Actualiza el listado principal
+      // El listado no está montado mientras se publica: se borra `items` de la caché
+      // para que se vuelva a pedir al volver a "/" (también limpia búsquedas viejas).
+      update(cache) {
+        cache.evict({ fieldName: 'items' })
+        cache.gc()
+      },
     })
   }
 
