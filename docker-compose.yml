@@ -93,6 +93,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-pujaz_usuarios}
     volumes:
     - usuarios_data:/var/lib/postgresql/data
+    - ./Pz_usuarios_cl/migrations:/docker-entrypoint-initdb.d:ro
     networks:
     - data
     healthcheck:
@@ -111,6 +112,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-pujaz_subastas}
     volumes:
     - subastas_data:/var/lib/postgresql/data
+    - ./Pz_subastas_cl/migrations:/docker-entrypoint-initdb.d:ro
     networks:
     - data
     healthcheck:
@@ -129,6 +131,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-pujaz_billetera}
     volumes:
     - billetera_data:/var/lib/postgresql/data
+    - ./Pz_billetera_cl/migrations:/docker-entrypoint-initdb.d:ro
     networks:
     - data
     healthcheck:
