@@ -1,9 +1,10 @@
 'use client'
 // Formulario para pujar (mutation placeBid). Muestra los errores del contrato con mensajes claros.
-import { useMutation } from '@apollo/client/react'
+import { useMutation, useQuery } from '@apollo/client/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { WALLET } from '../api/billetera'
 import { codigoError } from '../api/errores'
 import { PLACE_BID, type AuctionDetail, type Bid } from '../api/items'
 import { useSesion } from '../session/SessionContext'
@@ -50,6 +51,17 @@ export function FormularioPuja({ subasta, onPujaAceptada }: Props) {
   const [pujaAceptada, setPujaAceptada] = useState<number | null>(null)
   const [pujar, { loading }] = useMutation(PLACE_BID)
 
+  // Saldo de quien va a pujar, para que sepa cuánto puede ofrecer sin salir de la subasta.
+  const { data: datosBilletera, refetch: refrescarBilletera } = useQuery(WALLET, { skip: !usuario })
+  const disponible = datosBilletera?.wallet.available
+
+  // Cuando cambia quién va ganando (puja propia o de otra persona), el saldo pudo cambiar:
+  // la puja propia reserva dinero y si a uno lo superan, el dinero vuelve al disponible.
+  const idGanadora = subasta.winningBid?.id
+  useEffect(() => {
+    if (usuario && idGanadora) void refrescarBilletera()
+  }, [usuario, idGanadora, refrescarBilletera])
+
   if (!usuario) {
     return (
       <p>
@@ -81,6 +93,14 @@ export function FormularioPuja({ subasta, onPujaAceptada }: Props) {
 
   return (
     <form className="formulario formulario-puja" onSubmit={enviar}>
+      {disponible !== undefined && (
+        <p className="saldo-puja">
+          <span>
+            Tu saldo disponible <strong>{formatearPrecio(disponible)}</strong>
+          </span>
+          <Link href="/billetera">Recargar</Link>
+        </p>
+      )}
       <div className="atajos" role="group" aria-label="Subir la oferta rápido">
         {INCREMENTOS.map((incremento) => (
           <button
@@ -109,6 +129,9 @@ export function FormularioPuja({ subasta, onPujaAceptada }: Props) {
         value={monto}
         onChange={(evento) => setMonto(evento.target.value)}
       />
+      {disponible !== undefined && Number(monto) > disponible && (
+        <p className="ayuda ayuda--aviso">Tu oferta supera tu saldo disponible.</p>
+      )}
       <button type="submit" className="boton-pujar" disabled={loading}>
         {loading ? 'Enviando…' : 'Pujar'}
       </button>

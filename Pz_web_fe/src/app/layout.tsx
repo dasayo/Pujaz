@@ -24,6 +24,14 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <Proveedores>
           <Encabezado />
           <main className="layout-main">{children}</main>
+          <footer className="pie">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/marca/emblema.png" alt="" width={240} height={192} />
+            <div>
+              <p className="pie__marca">Pujaz, casa de subastas en línea</p>
+              <p>Proyecto del equipo 1C para Arquitectura de Software, Universidad Nacional de Colombia, 2026-II.</p>
+            </div>
+          </footer>
         </Proveedores>
       </body>
     </html>

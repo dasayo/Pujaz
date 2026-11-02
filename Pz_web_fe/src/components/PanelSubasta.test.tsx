@@ -1,6 +1,7 @@
 // Panel de subasta: estado inicial que manda el servidor, tiempo real y formulario de puja.
 import { fireEvent, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { WALLET } from '../api/billetera'
 import { PLACE_BID, type AuctionDetail } from '../api/items'
 import { mockSuscripcion, subastaReloj } from '../test/datos'
 import { ana, renderConSesion } from '../test/render'
@@ -109,6 +110,24 @@ describe('PanelSubasta', () => {
     await p.findByRole('button', { name: 'Pujar' })
     pujar('160000')
     expect(await p.findByRole('alert')).toHaveTextContent(mensaje)
+  })
+
+  it('muestra el saldo disponible y avisa si la oferta lo supera', async () => {
+    const billetera = {
+      request: { query: WALLET },
+      result: {
+        data: {
+          wallet: { __typename: 'Wallet', userId: ana.id, available: 200000, reserved: 0, movements: [] },
+        },
+      },
+      maxUsageCount: 5,
+    }
+    const p = renderPanel([mockSuscripcion(subastaReloj), billetera], true)
+    expect(await p.findByText('Tu saldo disponible')).toHaveTextContent('$ 200.000')
+    expect(p.getByRole('link', { name: 'Recargar' })).toHaveAttribute('href', '/billetera')
+
+    fireEvent.change(p.getByLabelText('Tu oferta (COP)'), { target: { value: '250000' } })
+    expect(p.getByText('Tu oferta supera tu saldo disponible.')).toBeInTheDocument()
   })
 
   it('si la subasta está cerrada no deja pujar', async () => {

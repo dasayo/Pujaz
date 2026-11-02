@@ -11,6 +11,7 @@ const nuevo = {
   __typename: 'Item',
   id: '2',
   name: 'Lámpara de bronce',
+  description: null,
   category: null,
   images: [],
   basePrice: 80000,

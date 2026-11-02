@@ -67,6 +67,8 @@ export function Encabezado() {
   return (
     <header className="layout-header">
       <Link href="/" className="layout-logo">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/marca/emblema.png" alt="" width={240} height={192} />
         Pujaz
       </Link>
       <Suspense fallback={<Menu usuario={usuario} ruta={null} />}>

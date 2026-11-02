@@ -14,6 +14,7 @@ export interface AuctionSummary {
 export interface ItemSummary {
   id: string
   name: string
+  description: string | null
   category: string | null
   images: string[]
   basePrice: number
@@ -39,7 +40,6 @@ export interface AuctionDetail extends AuctionSummary {
 }
 
 export interface ItemDetail extends Omit<ItemSummary, 'auction'> {
-  description: string | null
   documents: string[]
   auction: AuctionDetail | null
 }
@@ -63,6 +63,7 @@ export const GET_ITEMS: TypedDocumentNode<
     items(search: $search) {
       id
       name
+      description
       category
       images
       basePrice
@@ -184,6 +185,7 @@ export const CREATE_ITEM: TypedDocumentNode<
     createItem(input: $input) {
       id
       name
+      description
       category
       images
       basePrice
