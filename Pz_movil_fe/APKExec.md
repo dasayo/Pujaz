@@ -3,7 +3,7 @@
 ## 1. Preparar Flutter
 
 ```bash
-cd /home/adiosa/pujaz/Pujaz/frontend-movil
+cd /home/adiosa/pujaz/Pujaz/Pz_movil_fe
 flutter create --platforms=android,ios .
 flutter pub get
 flutter analyze
