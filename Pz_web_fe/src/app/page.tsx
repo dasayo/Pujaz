@@ -33,7 +33,10 @@ export default function ListadoPage({ searchParams }: PageProps<'/'>) {
     <section className="listado">
       <header className="encabezado-pagina">
         <h1>Subastas</h1>
-        <p className="entradilla">Piezas abiertas a puja. Entra a cada una para ver su historia y ofertar.</p>
+        <p className="entradilla">
+          Relojes, arte, joyas y autos clásicos. Cada pieza tiene su reloj de cierre y el precio cambia en
+          vivo con cada puja.
+        </p>
       </header>
       <Suspense
         fallback={

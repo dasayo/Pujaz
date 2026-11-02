@@ -24,6 +24,8 @@ ENV NODE_ENV=production \
 RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
 COPY --from=build --chown=nextjs:nextjs /app/.next/standalone ./
 COPY --from=build --chown=nextjs:nextjs /app/.next/static ./.next/static
+# Logo, emblema y fotos de las piezas de ejemplo (public/)
+COPY --from=build --chown=nextjs:nextjs /app/public ./public
 USER nextjs
 
 EXPOSE 3000
