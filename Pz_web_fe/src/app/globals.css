@@ -988,10 +988,20 @@ section.pagina-angosta h2 {
   overflow: hidden;
 }
 
+/* La foto llena su lado pero no decide la altura: la marca el texto. Así una foto vertical
+   (como la del reloj) no estira la tarjeta. */
+.destacado__foto {
+  position: relative;
+  min-height: 340px;
+}
+
 .destacado__foto .imagen-lote {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  min-height: 360px;
   aspect-ratio: auto;
+  object-fit: cover;
 }
 
 .destacado__texto {
@@ -1099,7 +1109,7 @@ section.pagina-angosta h2 {
     grid-template-columns: 1fr;
   }
 
-  .destacado__foto .imagen-lote {
+  .destacado__foto {
     min-height: 0;
     aspect-ratio: 4 / 3;
   }
