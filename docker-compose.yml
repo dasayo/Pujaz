@@ -1,7 +1,8 @@
 services:
-  pz-spa-fe:
-    build:
-      context: ./Pz_spa_fe
+  # Proxy de entrada (Nginx): único puerto publicado. Reenvía "/" al front Next.js y "/graphql"
+  # (HTTP y WebSocket) al gateway. En la vista C&C es parte del conector, no un componente.
+  pz-web-proxy:
+    image: nginx:stable-alpine
     ports:
       - "${NGINX_PORT:-8080}:80"
     environment:
@@ -11,6 +12,8 @@ services:
       - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
     networks: [public, backend]
     depends_on:
+      pz-web-fe:
+        condition: service_healthy
       pz-api-ag:
         condition: service_healthy
     healthcheck:
@@ -18,6 +21,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # Front web con SSR (Next.js, salida standalone). Pide datos al gateway por la red interna.
+  pz-web-fe:
+    build:
+      context: ./Pz_web_fe
+    environment:
+      GATEWAY_URL: http://pz-api-ag:${PORT:-4000}/graphql
+    networks: [backend]
+    depends_on:
+      pz-api-ag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   pz-api-ag:
     build:
@@ -106,6 +126,37 @@ services:
       timeout: 5s
       retries: 5
 
+  pz-postpuja-db:
+    image: mongo:6
+    volumes:
+      - postpuja_data:/data/db
+    networks: [data]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "if (db.adminCommand({ping: 1}).ok !== 1) quit(1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Entregas de las piezas ganadas. Crea la entrega con el evento SubastaCerrada (RabbitMQ)
+  # y el gateway la consulta y confirma por REST.
+  pz-postpuja-cl:
+    build:
+      context: ./Pz_postpuja_cl
+    environment:
+      MONGO_URI: mongodb://pz-postpuja-db:27017
+      # Vacío = solo API REST. Cuando exista Pz_eventos_mq: amqp://usuario:clave@pz-eventos-mq:5672/
+      RABBITMQ_URL: ${RABBITMQ_URL:-}
+    networks: [backend, data]
+    depends_on:
+      pz-postpuja-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 networks:
   public:
   backend:
@@ -116,3 +167,4 @@ networks:
 volumes:
   postgres_data:
   mongo_data:
+  postpuja_data:

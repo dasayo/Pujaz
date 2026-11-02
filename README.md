@@ -14,10 +14,11 @@ La versión entregada en la primera entrega es la etiqueta **`v1.0-entrega1`**, 
 
 | Componente | Carpeta | Tecnología | Responsabilidad |
 | --- | --- | --- | --- |
-| `Pz_spa_fe` | `Pz_spa_fe/` | TypeScript, React | Pantallas de la aplicación. Corre en el navegador; un contenedor Nginx la entrega y reenvía `/graphql` al gateway. |
+| `Pz_web_fe` | `Pz_web_fe/` | TypeScript, Next.js | Pantallas de la aplicación con SSR: el servidor arma el listado y el detalle; el panel en vivo, la puja y los formularios corren en el navegador. Un Nginx (`pz-web-proxy`) es el único puerto publicado y reenvía `/graphql` al gateway. |
 | `Pz_api_ag` | `Pz_api_ag/` | TypeScript, Node.js, GraphQL | Único punto de entrada: valida el JWT, llama a los componentes de lógica y publica las actualizaciones de las subastas por WebSocket. |
 | `Pz_transaccional_cl` | `Pz_transaccional_cl/` | Go | Usuarios, billetera, subastas y pujas, con transacciones. |
 | `Pz_catalogo_cl` | `Pz_catalogo_cl/` | Python, FastAPI | Fichas de las piezas y búsqueda. |
+| `Pz_postpuja_cl` | `Pz_postpuja_cl/` | Python, FastAPI, MongoDB | Entregas de las piezas ganadas: las crea con el evento `SubastaCerrada` y el ganador las confirma. |
 | `Pz_transaccional_db` | migraciones en `Pz_transaccional_cl/migrations/` | PostgreSQL 15 | Datos transaccionales. |
 | `Pz_catalogo_db` | semillas en `Pz_catalogo_db/` | MongoDB 6 | Catálogo de piezas. |
 
@@ -66,7 +67,8 @@ Ver [credenciales de prueba](docs/credenciales_prueba.md). En resumen: usuario `
 ## Pruebas
 
 ```bash
-cd Pz_spa_fe && npm install && npm test
+cd Pz_web_fe && npm ci && npm test
+cd Pz_postpuja_cl && pip install -r requirements.txt && python -m pytest
 cd Pz_api_ag && npm install && npm test
 ```
 
