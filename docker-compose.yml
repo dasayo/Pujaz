@@ -267,6 +267,30 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  pz-usuarios-cl:
+    build:
+      context: ./Pz_usuarios_cl
+      dockerfile: Dockerfile
+    environment:
+      PORT: '8080'
+      POSTGRES_USER: ${POSTGRES_USER:-pujaz_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pz-usuarios-db:5432/pujaz_usuarios
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@pz-eventos-mq:5672/}
+    networks:
+      - backend
+      - data
+    depends_on:
+      pz-usuarios-db:
+        condition: service_healthy
+      pz-eventos-mq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
   pz-billetera-cl:
     build:
       context: ./Pz_billetera_cl
