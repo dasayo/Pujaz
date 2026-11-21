@@ -26,13 +26,19 @@ jobs:
           c = json.load(sys.stdin)
           services = c["services"]
           assert len(services) == 17, "Se esperan 17 componentes"
-          assert set(c["networks"]) == {"public", "backend", "data"}
-          assert c["networks"]["backend"]["internal"] and c["networks"]["data"]["internal"]
+          # Segmentación de red (escenario 3): solo "public" sale al host.
+          for net, cfg in c["networks"].items():
+              assert net == "public" or cfg.get("internal"), net
           for name, service in services.items():
               nets = set(service["networks"])
               assert "public" not in nets or name == "pz-web-proxy", name
+              assert not service.get("ports") or name == "pz-web-proxy", name
               if name.endswith("-db"):
-                  assert nets == {"data"}, name
+                  # Cada base vive sola en la red de su microservicio.
+                  dueno = "datos-" + name[len("pz-"):-len("-db")]
+                  assert nets == {dueno}, name
+                  miembros = [s for s, x in services.items() if dueno in x["networks"]]
+                  assert len(miembros) == 2, (dueno, miembros)  # la base y su microservicio
               if name != "pz-cierre-cl":
                   assert service.get("healthcheck"), name
               for dep, rule in service.get("depends_on", {}).items():
@@ -40,7 +46,7 @@ jobs:
                   assert nets.intersection(services[dep]["networks"]), (name, dep)
                   if rule["condition"] == "service_healthy":
                       assert services[dep].get("healthcheck"), dep
-          print("17 componentes y dependencias validados")'
+          print("17 componentes, dependencias y segmentación validados")'
 
   go-tests:
     runs-on: ubuntu-latest
