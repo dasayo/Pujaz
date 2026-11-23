@@ -10,7 +10,7 @@ La versión entregada en la primera entrega es la etiqueta **`v1.0-entrega1`**, 
 
 ## Arquitectura
 
-![Vista C&C de Pujaz](docs/vista-cc.png)
+![Vista C&C de Pujaz](docs/vistas/cc/vista-cc-broker.png)
 
 | Componente | Carpeta | Tecnología | Responsabilidad |
 | --- | --- | --- | --- |
@@ -24,7 +24,7 @@ La versión entregada en la primera entrega es la etiqueta **`v1.0-entrega1`**, 
 
 Más detalle:
 
-- [Vista de componentes y conectores](docs/vista-cc.md)
+- [Vista de componentes y conectores](docs/vistas/cc/vista-cc-broker.md)
 - [Estilos arquitectónicos](docs/estilos_arquitectonicos.md)
 - [Contrato GraphQL](docs/contrato/schema.graphql) y [contrato REST](docs/contrato/rest.md)
 - [Modelo de datos](docs/modelo_de_datos.md)
